@@ -2,7 +2,7 @@
 const db = require('../services/database.js')
 
 function log (req, res, next) {
-    if (args.debug || args.d) {
+
         let logdata = {
             remoteaddr: req.ip,
             remoteuser: req.user,
@@ -31,7 +31,6 @@ function log (req, res, next) {
             logdata.useragent
         );
         next();
-    }
 }
 
 module.exports = log;
