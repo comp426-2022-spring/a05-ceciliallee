@@ -4,8 +4,7 @@ const express = require("express");
 const fs = require("fs");
 const app = express();
 const morgan = require("morgan");
-// const db = require("./database.js");
-app.use(express.urlencoded({ extended: true }));
+const logdb = require('./src/services/database.js')
 app.use(express.json());
 
 const help = (`
@@ -25,9 +24,7 @@ if (args.help || args.h) {
     process.exit(0);
 }
 
-const logdb = require('./src/services/database.js')
-
-const port = args.port || args.p || 5000;
+const port = args.port || args.p || process.env.PORT || 5000
 
 const server = app.listen(port, () => {
     console.log("Server running on port %PORT%".replace("%PORT%", port));
@@ -112,6 +109,8 @@ function flipACoin(call) {
         };
     }
 }
+
+app.use(express.static('./public'))
 
 app.get("/app/", (req, res, next) => {
     res.statusCode = 200;
