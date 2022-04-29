@@ -25,52 +25,40 @@ if (args.help || args.h) {
     process.exit(0);
 }
 
+const logdb = require('./src/services/database.js')
 
 const port = args.port || args.p || 5000;
-
 
 const server = app.listen(port, () => {
     console.log("Server running on port %PORT%".replace("%PORT%", port));
 });
 
 if (args.log === "true") {
-    const logStream = fs.createWriteStream('access.log', { flags: "a" });
-    app.use(morgan("combined", { stream: logStream }));
-}
+    const logdir = './log/';
 
-// app.use((req, res, next) => {
-//     if (args.debug || args.d) {
-//         let logdata = {
-//             remoteaddr: req.ip ?? null,
-//             remoteuser: req.user ?? null,
-//             time: Date.now() ?? null,
-//             method: req.method ?? null,
-//             url: req.url ?? null,
-//             protocol: req.protocol ?? null,
-//             httpversion: req.httpVersion ?? null,
-//             status: res.statusCode ?? null,
-//             referrer: req.headers["referer"] ?? null,
-//             useragent: req.headers["user-agent"] ?? null,
-//         };
-//         const stmt = db.prepare(
-//             "INSERT INTO accesslog (remoteaddr, remoteuser, time, method, url, protocol, httpversion, status, referrer, useragent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-//         );
-//         const info = stmt.run(
-//             logdata.remoteaddr,
-//             logdata.remoteuser,
-//             logdata.time,
-//             logdata.method,
-//             logdata.url,
-//             logdata.protocol,
-//             logdata.httpversion,
-//             logdata.status,
-//             logdata.referrer,
-//             logdata.useragent
-//         );
-//         console.log(logdata);
-//         next();
-//     }
-// });
+    if (!fs.existsSync(logdir)) {
+        fs.mkdirSync(logdir);
+    }
+    const accessLog = fs.createWriteStream(logdir + 'access.log', { flags: 'a' })
+    app.use(morgan('combined', { stream: accessLog }))
+}
+app.use((req, res, next) => {
+    let logdata = {
+        remoteaddr: req.ip,
+        remoteuser: req.user,
+        time: Date.now(),
+        method: req.method,
+        url: req.url,
+        protocol: req.protocol,
+        httpversion: req.httpVersion,
+        status: res.statusCode,
+        referrer: req.headers['referer'],
+        useragent: req.headers['user-agent']
+    };
+    const stmt = logdb.prepare('INSERT INTO accesslog (remoteaddr, remoteuser, time, method, url, protocol, httpversion, status, referrer, useragent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    const info = stmt.run(logdata.remoteaddr, logdata.remoteuser, logdata.time, logdata.method, logdata.url, logdata.protocol, logdata.httpversion, logdata.status, logdata.referrer, logdata.useragent)
+    next();
+})
 
 function coinFlip() {
     let randomNum = Math.random();
