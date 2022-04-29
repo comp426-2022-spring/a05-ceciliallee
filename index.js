@@ -4,7 +4,7 @@ const express = require("express");
 const fs = require("fs");
 const app = express();
 const morgan = require("morgan");
-const db = require("./database.js");
+// const db = require("./database.js");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
